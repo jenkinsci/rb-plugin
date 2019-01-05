@@ -7,8 +7,7 @@
         <version>2.33</version>
         <relativePath />
     </parent>
-    <groupId>org.reviewboard</groupId>
-    <artifactId>rbjenkins</artifactId>
+    <artifactId>rb</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <properties>
@@ -21,7 +20,7 @@
           ~ stapler-plugin.version: The Stapler Maven plugin version required by the plugin.
      -->
     </properties>
-    <name>Review Board Plugin for Jenkins</name>
+    <name>Review Board Plugin</name>
     <description>Adds Review Board integration to Jenkins</description>
     <url></url>
     <licenses>
