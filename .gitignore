@@ -1,0 +1,10 @@
+# Wildcards
+.*.swp
+.*.swo
+*.bak
+*.orig
+*.rej
+
+# Directories/symlinks
+.DS_Store
+target/

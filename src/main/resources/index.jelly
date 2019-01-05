@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+    This plugin enables integration with Review Board, allowing review requests to automatically start builds, as well as have status updates provided by Jenkins.
+</div>
