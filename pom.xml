@@ -95,14 +95,13 @@
         </dependency>
     </dependencies>
 
-    <!-- If you want this to appear on the wiki page:
     <developers>
       <developer>
-        <id>bhacker</id>
-        <name>Bob Q. Hacker</name>
-        <email>bhacker@nowhere.net</email>
+        <id>trowbrds</id>
+        <name>David Trowbridge</name>
+        <email>david@beanbaginc.com</email>
       </developer>
-    </developers> -->
+    </developers>
 
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/rb-plugin.git</connection>
