@@ -11,34 +11,33 @@ facilitate this integration.
 Once this plugin is installed, you'll need to configure your Review Board
 server inside Jenkins:
 
-1. On your Jenkins server, navigate to `Manage Jenkins`.
+1. On your Jenkins server, navigate to `Manage Jenkins`, then select `Configure
+   System`.
 
-2. In the list, find an enter `Configure System`.
+2. Scroll down until you reach the `Review Board` configuration section.
 
-3. Scroll down until you reach the `Review Board` configuration section.
-
-4. Click `Add Review Board Server` to create a new Review Board server
+3. Click `Add Review Board Server` to create a new Review Board server
    configuration.
 
-5. Enter your Review Board server URL into the `Review Board URL` field. This
+4. Enter your Review Board server URL into the `Review Board URL` field. This
    must match the server URL set in the Review Board `General Settings` page.
 
-6. If you have previously created a credential for your Review Board API token,
+5. If you have previously created a credential for your Review Board API token,
    select it here and skip to the job configuration.
 
-7. If you have not yet created a credential for the Review Board API token,
+6. If you have not yet created a credential for the Review Board API token,
    click `Add` and select `Jenkins`.
 
-8. In the prompt, set `Kind` to `Secret text`.
+7. In the prompt, set `Kind` to `Secret text`.
 
-9. Set `Scope` to `Global`.
+8. Set `Scope` to `Global`.
 
-10. Fill in `Secret` with the `Review Board API Token` found in the Jenkins CI
-    integration configuration page in the Review Board administration UI.
+9. Fill in `Secret` with the `Review Board API Token` found in the Jenkins CI
+   integration configuration page in the Review Board administration UI.
 
-11. Give your secret a unique identifier in the `ID` field and click `Add`.
+10. Give your secret a unique identifier in the `ID` field and click `Add`.
 
-12. Click `Save` to save your server configuration.
+11. Click `Save` to save your server configuration.
 
 
 ## Job Configuration
