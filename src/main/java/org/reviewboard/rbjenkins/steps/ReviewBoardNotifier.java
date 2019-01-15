@@ -5,8 +5,9 @@ import hudson.Launcher;
 import hudson.model.*;
 import hudson.tasks.*;
 import hudson.util.FormValidation;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import jenkins.model.GlobalConfiguration;
-import org.apache.commons.httpclient.HttpStatus;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -16,12 +17,6 @@ import org.reviewboard.rbjenkins.common.ReviewBoardUtils;
 import org.reviewboard.rbjenkins.common.ReviewRequest;
 import org.reviewboard.rbjenkins.config.ReviewBoardGlobalConfiguration;
 import org.reviewboard.rbjenkins.config.ReviewBoardServerConfiguration;
-
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.*;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Creates a post-build step in Jenkins for notifying Review Board of the
@@ -85,14 +80,17 @@ public class ReviewBoardNotifier extends Notifier {
             state = ReviewRequest.StatusUpdateState.SUCCESS_STATE;
             description = Messages.ReviewBoard_Job_Success();
         } else {
-            state = ReviewRequest.StatusUpdateState.FAILURE_STATE;
             if (result == Result.ABORTED) {
+                state = ReviewRequest.StatusUpdateState.ERROR_STATE;
                 description = Messages.ReviewBoard_Job_Aborted();
             } else if (result == Result.NOT_BUILT) {
+                state = ReviewRequest.StatusUpdateState.ERROR_STATE;
                 description = Messages.ReviewBoard_Job_NotBuilt();
             } else if (result == Result.UNSTABLE) {
+                state = ReviewRequest.StatusUpdateState.FAILURE_STATE;
                 description = Messages.ReviewBoard_Job_Unstable();
             } else {
+                state = ReviewRequest.StatusUpdateState.FAILURE_STATE;
                 description = Messages.ReviewBoard_Job_Failure();
             }
         }
@@ -102,103 +100,19 @@ public class ReviewBoardNotifier extends Notifier {
             updateStatusUpdate(reviewRequest, state, description);
         } catch (final ReviewBoardException e) {
             listener.error("Unable to notify Review Board of the result of " +
-                           "the build. Cause: " + e.getMessage());
+                           "the build: " + e.getMessage());
         }
 
         return true;
     }
 
-    /**
-     * Updates a review request's status update object. This is what is shown
-     * on the review request page detailing the integration's status.
-     * @param reviewRequest Review request
-     * @param state Status update state
-     * @param description Status update description
-     * @throws IOException
-     * @throws ReviewBoardException
-     */
     public void updateStatusUpdate(
         final ReviewRequest reviewRequest,
         final ReviewRequest.StatusUpdateState state,
-        final String description) throws IOException, ReviewBoardException {
-        final String path = String.format(
-            "/api/review-requests/%d/status-updates/%d/",
-            reviewRequest.getReviewId(),
-            reviewRequest.getStatusUpdateId());
-
-        final ReviewBoardGlobalConfiguration globalConfig =
-            GlobalConfiguration.all().get(
-                ReviewBoardGlobalConfiguration.class);
-        if (globalConfig == null) {
-            throw new ReviewBoardException(
-                "No Review Board server configurations found.");
-        }
-
-        final ReviewBoardServerConfiguration serverConfig =
-            globalConfig.getServerConfiguration(reviewRequest.getServerURL());
-        if (serverConfig == null) {
-            throw new ReviewBoardException(
-                String.format("No Review Board server configuration found " +
-                              "for server URL '%s'.",
-                              reviewRequest.getServerURL().toString()));
-        }
-
-        final String token = String.format(
-            "token %s", serverConfig.getReviewBoardAPIToken());
-        final URL url = new URL(
-            new URL(serverConfig.getReviewBoardURL()), path);
-        final HttpURLConnection conn =
-            (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("PUT");
-        conn.setRequestProperty("Authorization", token);
-        conn.setRequestProperty("Content-Type",
-                                "application/x-www-form-urlencoded");
-        conn.setDoOutput(true);
-
-        // Generate our form content with the state and description of the
-        // build result.
-        final String encodedState = URLEncoder.encode(
-            state.toString(), StandardCharsets.UTF_8.toString());
-        final String encodedDescription = URLEncoder.encode(
-            description, StandardCharsets.UTF_8.toString());
-        final String content = String.format(
-            "state=%s&description=%s",
-            encodedState,
-            encodedDescription);
-
-        try {
-            final BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(conn.getOutputStream(),
-                                       StandardCharsets.UTF_8));
-            writer.write(content);
-            writer.flush();
-            writer.close();
-        } catch (final ConnectException e) {
-            throw new ReviewBoardException(
-                "Review Board URL could not be reached. Cause: " +
-                e.getMessage());
-        }
-
-        final int responseCode = conn.getResponseCode();
-        switch (responseCode) {
-            case HttpStatus.SC_OK:
-                break;
-            case HttpStatus.SC_NOT_FOUND:
-                throw new ReviewBoardException(
-                    "Status Update or Review Request not found");
-            case HttpStatus.SC_FORBIDDEN:
-                throw new ReviewBoardException(
-                    "Review Board API token does not have permission to " +
-                    "update Status Update");
-            case HttpStatus.SC_UNAUTHORIZED:
-                throw new ReviewBoardException(
-                    "Review Board API token is invalid");
-            default:
-                throw new ReviewBoardException(
-                    String.format("Unhandled response code sent from Review " +
-                                  "Board: %d",
-                                  responseCode));
-        }
+        final String description)
+        throws IOException, ReviewBoardException {
+        ReviewBoardUtils.updateStatusUpdate(
+            reviewRequest, state, description, null, null);
     }
 
     /**

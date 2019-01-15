@@ -1,23 +1,22 @@
 package org.reviewboard.rbjenkins.steps;
 
-import hudson.Launcher;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.Proc;
 import hudson.model.*;
-import hudson.util.FormValidation;
-import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
-import jenkins.model.GlobalConfiguration;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-
+import hudson.tasks.Builder;
+import hudson.util.FormValidation;
 import java.io.IOException;
 import java.net.MalformedURLException;
-
+import jenkins.model.GlobalConfiguration;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import org.reviewboard.rbjenkins.Messages;
+import org.reviewboard.rbjenkins.common.ReviewBoardException;
 import org.reviewboard.rbjenkins.common.ReviewBoardUtils;
 import org.reviewboard.rbjenkins.common.ReviewRequest;
 import org.reviewboard.rbjenkins.config.ReviewBoardGlobalConfiguration;
@@ -132,6 +131,19 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
                 run.setResult(Result.FAILURE);
                 return;
             }
+        }
+
+        // Update the review request with the link to the build.
+        try {
+            ReviewBoardUtils.updateStatusUpdate(
+                reviewRequest,
+                ReviewRequest.StatusUpdateState.PENDING_STATE,
+                "build running",
+                run.getAbsoluteUrl(),
+                "See build");
+        } catch (final ReviewBoardException e) {
+            listener.error("Unable to notify Review Board of the build: " +
+                           e.getMessage());
         }
     }
 

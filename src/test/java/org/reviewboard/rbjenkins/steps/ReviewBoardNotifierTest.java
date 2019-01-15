@@ -113,12 +113,12 @@ public class ReviewBoardNotifierTest {
                             ReviewBoard_Job_Success());
 
         testBuildStatus(Result.ABORTED,
-                        ReviewRequest.StatusUpdateState.FAILURE_STATE,
+                        ReviewRequest.StatusUpdateState.ERROR_STATE,
                         org.reviewboard.rbjenkins.Messages.
                             ReviewBoard_Job_Aborted());
 
         testBuildStatus(Result.NOT_BUILT,
-                        ReviewRequest.StatusUpdateState.FAILURE_STATE,
+                        ReviewRequest.StatusUpdateState.ERROR_STATE,
                         org.reviewboard.rbjenkins.Messages.
                             ReviewBoard_Job_NotBuilt());
 
@@ -186,7 +186,7 @@ public class ReviewBoardNotifierTest {
             ArgumentMatchers.eq(ReviewRequest.StatusUpdateState.SUCCESS_STATE),
             ArgumentMatchers.eq(Messages.ReviewBoard_Job_Success()));
         jenkins.assertLogContains(
-            "Unable to notify Review Board of the result of the build.",
+            "Unable to notify Review Board of the result of the build:",
             build);
     }
 }
