@@ -22,7 +22,7 @@
     </properties>
     <name>Review Board Plugin</name>
     <description>Adds Review Board integration to Jenkins</description>
-    <url />
+    <url>https://github.com/jenkinsci/rb-plugin</url>
     <licenses>
         <license>
             <name>MIT License</name>
@@ -106,8 +106,7 @@
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/rb-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/rb-plugin.git</developerConnection>
-        <url>https://github.com/jenkinsci/rb-plugin</url>
-      <tag>rb-1.0</tag>
+        <tag>rb-1.0</tag>
   </scm>
     <repositories>
         <repository>
