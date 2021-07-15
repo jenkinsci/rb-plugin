@@ -91,7 +91,7 @@ public class ReviewBoardUtils {
         Objects.requireNonNull(description, "description must not be null");
 
         final String path = String.format(
-            "/api/review-requests/%d/status-updates/%d",
+            "/api/review-requests/%d/status-updates/%d/",
             reviewRequest.getReviewId(),
             reviewRequest.getStatusUpdateId());
 
