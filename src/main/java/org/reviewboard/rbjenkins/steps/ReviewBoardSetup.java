@@ -9,6 +9,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.net.MalformedURLException;
 import jenkins.model.GlobalConfiguration;
 import jenkins.tasks.SimpleBuildStep;
@@ -29,13 +30,26 @@ import org.reviewboard.rbjenkins.config.ReviewBoardServerConfiguration;
 public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
     private static final String RBT_INSTALL = "pip install --user rbtools";
     private static final String RBT_COMMAND =
-        "rbt patch --api-token %s --server %s --diff-revision %d %d";
+        "rbt patch --api-token %s --server %s --diff-revision %d %s %d";
+
+    private boolean downloadOnly = false;
+    private boolean installRBTools = true;
 
     /**
      * Constructs the setup step.
      */
     @DataBoundConstructor
-    public ReviewBoardSetup() {
+    public ReviewBoardSetup(boolean downloadOnly, boolean installRBTools) {
+        this.downloadOnly = downloadOnly;
+        this.installRBTools = installRBTools;
+    }
+
+    public boolean getDownloadOnly() {
+      return downloadOnly;
+    }
+
+    public boolean getInstallRBTools() {
+      return installRBTools;
     }
 
     /**
@@ -99,12 +113,18 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
             return;
         }
 
+        String downloadOnlyFile = "";
+        if (downloadOnly) {
+            downloadOnlyFile = "--write patch.diff";
+        }
+
         // Construct commands to install and use rbtools.
         final String rbtCommand = String.format(
             RBT_COMMAND,
             serverConfig.getReviewBoardAPIToken(),
             serverConfig.getReviewBoardURL(),
             reviewRequest.getRevision(),
+            downloadOnlyFile,
             reviewRequest.getReviewId());
 
         // Generate a command mask to hide the API token from the console
@@ -115,10 +135,11 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
         // Set the 4th entry's mask to true - this is the API token.
         rbtCommandMask[3] = true;
 
-        final Launcher.ProcStarter[] commands = {
-            launcher.launch().cmds(RBT_INSTALL.split(" ")),
-            launcher.launch().cmds(rbtCommand.split(" ")).masks(rbtCommandMask)
-        };
+        ArrayList<Launcher.ProcStarter> commands = new ArrayList<Launcher.ProcStarter>();
+        if (installRBTools) {
+            commands.add(launcher.launch().cmds(RBT_INSTALL.split(" ")));
+        }
+        commands.add(launcher.launch().cmds(rbtCommand.split(" ")).masks(rbtCommandMask));
 
         for (Launcher.ProcStarter args : commands) {
             // Run the command in the workspace

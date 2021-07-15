@@ -2,4 +2,12 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
          xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <f:description>${%Description}</f:description>
+
+    <f:entry title="Download patch without applying" description="${%DownloadOnly}" field="downloadOnly">
+        <f:checkbox default="false" />
+    </f:entry>
+
+    <f:entry title="Install RBTools" description="${%InstallRBTools}" field="installRBTools">
+        <f:checkbox default="true" />
+    </f:entry>
 </j:jelly>

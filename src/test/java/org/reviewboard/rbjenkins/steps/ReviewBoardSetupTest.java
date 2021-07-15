@@ -77,9 +77,19 @@ public class ReviewBoardSetupTest {
     public void testConfigRoundtrip() throws Exception {
         setupGlobalConfig();
         FreeStyleProject project = jenkins.createFreeStyleProject();
-        project.getBuildersList().add(new ReviewBoardSetup());
+        project.getBuildersList().add(new ReviewBoardSetup(false, true));
         project = jenkins.configRoundtrip(project);
-        jenkins.assertEqualDataBoundBeans(new ReviewBoardSetup(),
+        jenkins.assertEqualDataBoundBeans(new ReviewBoardSetup(false, true),
+                                          project.getBuildersList().get(0));
+    }
+
+    @Test
+    public void testConfigRoundtripDownloadOnly() throws Exception {
+        setupGlobalConfig();
+        FreeStyleProject project = jenkins.createFreeStyleProject();
+        project.getBuildersList().add(new ReviewBoardSetup(true, true));
+        project = jenkins.configRoundtrip(project);
+        jenkins.assertEqualDataBoundBeans(new ReviewBoardSetup(true, true),
                                           project.getBuildersList().get(0));
     }
 
@@ -87,7 +97,7 @@ public class ReviewBoardSetupTest {
     public void testBuildNoParameters() throws Exception {
         setupGlobalConfig();
         final FreeStyleProject project = jenkins.createFreeStyleProject();
-        final ReviewBoardSetup builder = new ReviewBoardSetup();
+        final ReviewBoardSetup builder = new ReviewBoardSetup(false, true);
         project.getBuildersList().add(builder);
 
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -102,7 +112,7 @@ public class ReviewBoardSetupTest {
     public void testBuildInvalidURL() throws Exception {
         setupGlobalConfig();
         final FreeStyleProject project = jenkins.createFreeStyleProject();
-        final ReviewBoardSetup builder = new ReviewBoardSetup();
+        final ReviewBoardSetup builder = new ReviewBoardSetup(false, true);
         project.getBuildersList().add(builder);
 
         final StringParameterDefinition invalidURL =
@@ -123,7 +133,7 @@ public class ReviewBoardSetupTest {
         final String[] commands = {
             "pip install --user rbtools",
             String.format("rbt patch --api-token %s --server %s " +
-                          "--diff-revision %s %s",
+                          "--diff-revision %s  %s",
                           "UNKNOWN",
                           REVIEWBOARD_URL,
                           DIFF_REVISION,
@@ -141,7 +151,39 @@ public class ReviewBoardSetupTest {
         final FreeStyleProject project = jenkins.createFreeStyleProject();
         addBuildParameters(project);
 
-        final ReviewBoardSetup builder = new ReviewBoardSetup();
+        final ReviewBoardSetup builder = new ReviewBoardSetup(false, true);
+        project.getBuildersList().add(builder);
+        project.setAssignedNode(slave);
+
+        final FreeStyleBuild build = project.scheduleBuild2(0).get();
+        jenkins.assertBuildStatus(Result.SUCCESS, build);
+    }
+
+    @Test
+    public void testBuildWithParametersDownloadOnly() throws Exception {
+        setupGlobalConfig();
+        final String[] commands = {
+            "pip install --user rbtools",
+            String.format("rbt patch --api-token %s --server %s " +
+                          "--diff-revision %s --write patch.diff %s",
+                          "UNKNOWN",
+                          REVIEWBOARD_URL,
+                          DIFF_REVISION,
+                          REVIEW_ID)
+        };
+
+        final PretendSlave slave = jenkins.createPretendSlave(procStarter -> {
+            // Check that we run the correct commands.
+            String command = String.join(" ", procStarter.cmds());
+            assertTrue(ArrayUtils.contains(commands, command));
+
+            return new FakeLauncher.FinishedProc(0);
+        });
+
+        final FreeStyleProject project = jenkins.createFreeStyleProject();
+        addBuildParameters(project);
+
+        final ReviewBoardSetup builder = new ReviewBoardSetup(true, true);
         project.getBuildersList().add(builder);
         project.setAssignedNode(slave);
 
@@ -154,7 +196,7 @@ public class ReviewBoardSetupTest {
         final FreeStyleProject project = jenkins.createFreeStyleProject();
         addBuildParameters(project);
 
-        final ReviewBoardSetup builder = new ReviewBoardSetup();
+        final ReviewBoardSetup builder = new ReviewBoardSetup(false, true);
         project.getBuildersList().add(builder);
 
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -170,7 +212,7 @@ public class ReviewBoardSetupTest {
         final FreeStyleProject project = jenkins.createFreeStyleProject();
         addBuildParameters(project);
 
-        final ReviewBoardSetup builder = new ReviewBoardSetup();
+        final ReviewBoardSetup builder = new ReviewBoardSetup(false, true);
         project.getBuildersList().add(builder);
 
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -192,7 +234,7 @@ public class ReviewBoardSetupTest {
         final FreeStyleProject project = jenkins.createFreeStyleProject();
         addBuildParameters(project);
 
-        final ReviewBoardSetup builder = new ReviewBoardSetup();
+        final ReviewBoardSetup builder = new ReviewBoardSetup(false, true);
         project.getBuildersList().add(builder);
         project.setAssignedNode(slave);
 
