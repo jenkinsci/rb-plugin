@@ -3,10 +3,13 @@ package org.reviewboard.rbjenkins.steps;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.*;
-import hudson.tasks.*;
+import hudson.tasks.Notifier;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Publisher;
+import jenkins.tasks.SimpleBuildStep;
 import hudson.util.FormValidation;
-import java.io.IOException;
-import java.net.MalformedURLException;
+import hudson.FilePath;
 import jenkins.model.GlobalConfiguration;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -16,13 +19,16 @@ import org.reviewboard.rbjenkins.common.ReviewBoardException;
 import org.reviewboard.rbjenkins.common.ReviewBoardUtils;
 import org.reviewboard.rbjenkins.common.ReviewRequest;
 import org.reviewboard.rbjenkins.config.ReviewBoardGlobalConfiguration;
-import org.reviewboard.rbjenkins.config.ReviewBoardServerConfiguration;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import javax.annotation.Nonnull;
 
 /**
  * Creates a post-build step in Jenkins for notifying Review Board of the
  * status of the triggered build.
  */
-public class ReviewBoardNotifier extends Notifier {
+public class ReviewBoardNotifier extends Notifier implements SimpleBuildStep {
     /**
      * Constructs the notifier.
      */
@@ -34,29 +40,28 @@ public class ReviewBoardNotifier extends Notifier {
      * This function will be called as part of the post-build step. It will
      * notify Review Board of the status of the build and update the status
      * update resource.
-     * @param build The active Jenkins build
+     * @param run The active Jenkins build
+     * @param workspace Current workspace
+     * @param env Current environment variables
      * @param launcher Process launcher
      * @param listener Logger
-     * @return True if build can continue
      * @throws IOException
      */
     @Override
-    public boolean perform(final AbstractBuild<?, ?> build,
-                           final Launcher launcher,
-                           final BuildListener listener)
-        throws IOException {
+    public void perform(
+            @Nonnull Run<?, ?> run,
+            @Nonnull FilePath filePath,
+            @Nonnull Launcher launcher,
+            @Nonnull TaskListener listener) throws InterruptedException, IOException {
         final ReviewRequest reviewRequest;
 
         try {
             reviewRequest = ReviewBoardUtils.parseReviewRequestFromParameters(
-                build.getActions(ParametersAction.class));
+                run.getActions(ParametersAction.class));
         } catch (MalformedURLException e) {
             listener.error("URL provided in REVIEWBOARD_SERVER is not a " +
                            "valid URL.");
-
-            // Return true so we don't kill the build, as this is a post-build
-            // step and isn't essential.
-            return true;
+            return;
         }
 
         // Check that we've successfully received all parameters.
@@ -66,13 +71,10 @@ public class ReviewBoardNotifier extends Notifier {
             listener.error("REVIEWBOARD_REVIEW_ID, or " +
                            "REVIEWBOARD_STATUS_UPDATE_ID, or " +
                            "REVIEWBOARD_SERVER not provided in parameters");
-
-            // Return true so we don't kill the build, as this is a post-build
-            // step and isn't essential.
-            return true;
+            return;
         }
 
-        final Result result = build.getResult();
+        final Result result = run.getResult();
         final ReviewRequest.StatusUpdateState state;
         final String description;
 
@@ -103,7 +105,7 @@ public class ReviewBoardNotifier extends Notifier {
                            "the build: " + e.getMessage());
         }
 
-        return true;
+        return;
     }
 
     public void updateStatusUpdate(
