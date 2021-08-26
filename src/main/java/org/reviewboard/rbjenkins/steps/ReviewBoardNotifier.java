@@ -41,7 +41,7 @@ public class ReviewBoardNotifier extends Notifier implements SimpleBuildStep {
      * notify Review Board of the status of the build and update the status
      * update resource.
      * @param run The active Jenkins build
-     * @param FilePath The path to the build ifle
+     * @param filePath The path to the build file
      * @param launcher Process launcher
      * @param listener Logger
      */
