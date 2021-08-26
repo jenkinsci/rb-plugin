@@ -60,8 +60,6 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
      * @param workspace Active workspace
      * @param launcher Process launcher
      * @param listener Logger
-     * @throws InterruptedException
-     * @throws IOException
      */
     @Override
     public void perform(final Run<?, ?> run, final FilePath workspace,
@@ -200,7 +198,7 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
         /**
          * Informs Jenkins of whether or not this build step is applicable to
          * the current job, which it always is.
-         * @param aClass
+         * @param aClass The project class
          * @return true
          */
         @Override

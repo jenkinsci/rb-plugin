@@ -41,11 +41,9 @@ public class ReviewBoardNotifier extends Notifier implements SimpleBuildStep {
      * notify Review Board of the status of the build and update the status
      * update resource.
      * @param run The active Jenkins build
-     * @param workspace Current workspace
-     * @param env Current environment variables
+     * @param FilePath The path to the build ifle
      * @param launcher Process launcher
      * @param listener Logger
-     * @throws IOException
      */
     @Override
     public void perform(
@@ -159,7 +157,7 @@ public class ReviewBoardNotifier extends Notifier implements SimpleBuildStep {
         /**
          * Informs Jenkins of whether or not this build step is applicable to
          * the current job, which it always is.
-         * @param aClass
+         * @param aClass The project class
          * @return true
          */
         @Override

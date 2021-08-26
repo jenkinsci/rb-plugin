@@ -76,8 +76,6 @@ public class ReviewBoardUtils {
      * @param description Status update description
      * @param url URL to use for the build link
      * @param urlText Text to use for the build link
-     * @throws IOException
-     * @throws ReviewBoardException
      */
     public static void updateStatusUpdate(
         final ReviewRequest reviewRequest,
