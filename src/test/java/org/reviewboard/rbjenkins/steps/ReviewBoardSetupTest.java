@@ -133,7 +133,7 @@ public class ReviewBoardSetupTest {
         final String[] commands = {
             "pip install --user rbtools",
             String.format("rbt patch --api-token %s --server %s " +
-                          "--diff-revision %s  %s",
+                          "--diff-revision %s %s",
                           "UNKNOWN",
                           REVIEWBOARD_URL,
                           DIFF_REVISION,
