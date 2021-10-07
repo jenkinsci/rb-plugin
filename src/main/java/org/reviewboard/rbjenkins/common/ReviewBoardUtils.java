@@ -112,7 +112,6 @@ public class ReviewBoardUtils {
                               "for server URL '%s'.",
                               reviewRequest.getServerURL().toString()));
         }
-
         final String token = String.format(
             "token %s", serverConfig.getReviewBoardAPIToken());
         final URL serverBaseUrl = new URL(serverConfig.getReviewBoardURL());
