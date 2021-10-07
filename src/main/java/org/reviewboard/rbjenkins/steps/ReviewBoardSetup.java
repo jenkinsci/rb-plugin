@@ -30,7 +30,7 @@ import org.reviewboard.rbjenkins.config.ReviewBoardServerConfiguration;
 public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
     private static final String RBT_INSTALL = "pip install --user rbtools";
     private static final String RBT_COMMAND =
-        "rbt patch --api-token %s --server %s --diff-revision %d %s %d";
+        "rbt patch --api-token %s --server %s --diff-revision %d %s%d";
 
     private boolean downloadOnly = false;
     private boolean installRBTools = true;
@@ -113,7 +113,7 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
 
         String downloadOnlyFile = "";
         if (downloadOnly) {
-            downloadOnlyFile = "--write patch.diff";
+            downloadOnlyFile = "--write patch.diff ";
         }
 
         // Construct commands to install and use rbtools.
