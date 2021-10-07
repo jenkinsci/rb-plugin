@@ -112,12 +112,12 @@ public class ReviewBoardUtils {
                               "for server URL '%s'.",
                               reviewRequest.getServerURL().toString()));
         }
+
         final String token = String.format(
             "token %s", serverConfig.getReviewBoardAPIToken());
         final URL serverBaseUrl = new URL(serverConfig.getReviewBoardURL());
         final String fullPath = (serverBaseUrl.getPath() + path).replace("//","/");  
         final URL serverUrl = new URL(serverBaseUrl,fullPath);
-
         final HttpURLConnection conn =
             (HttpURLConnection)serverUrl.openConnection();
         conn.setRequestMethod("PUT");
