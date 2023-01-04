@@ -31,17 +31,17 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>structs</artifactId>
-						<version>1.23</version>
+						<version>324.va_f5d6774f3a_d</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>credentials</artifactId>
-						<version>2.6.1.1</version>
+						<version>1214.v1de940103927</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>plain-credentials</artifactId>
-						<version>1.7</version>
+						<version>143.v1b_df8b_d3b_e48</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
