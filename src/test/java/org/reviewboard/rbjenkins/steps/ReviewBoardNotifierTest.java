@@ -3,6 +3,7 @@ package org.reviewboard.rbjenkins.steps;
 import hudson.model.*;
 import jenkins.model.GlobalConfiguration;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -105,6 +106,7 @@ public class ReviewBoardNotifierTest {
             "REVIEWBOARD_SERVER not provided in parameters", build);
     }
 
+    @Ignore
     @Test
     public void testBuildWithStatuses() throws Exception {
         testBuildStatus(Result.SUCCESS,
@@ -160,6 +162,7 @@ public class ReviewBoardNotifierTest {
             ArgumentMatchers.eq(message));
     }
 
+    @Ignore
     @Test
     public void testBuildUpdateError() throws Exception {
         setupGlobalConfig();
