@@ -13,7 +13,6 @@
     <properties>
         <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
         <jenkins.version>2.263.1</jenkins.version>
-        <java.level>8</java.level>
         <!-- Other properties you may want to use:
           ~ jenkins-test-harness.version: Jenkins Test Harness version you use to test the plugin. For Jenkins version >= 1.580.1 use JTH 2.0 or higher.
           ~ stapler-plugin.version: The Stapler Maven plugin version required by the plugin.
@@ -53,7 +52,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-cps</artifactId>
-						<version>2.93</version>
+						<version>3601.v9b_36a_d99e1cc</version>
             <scope>test</scope>
         </dependency>
         <dependency>
