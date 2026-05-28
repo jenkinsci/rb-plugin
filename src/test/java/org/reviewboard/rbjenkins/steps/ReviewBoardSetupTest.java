@@ -3,7 +3,11 @@ package org.reviewboard.rbjenkins.steps;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import hudson.model.*;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import jenkins.model.GlobalConfiguration;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -122,17 +126,18 @@ public class ReviewBoardSetupTest {
     }
 
     @Test
-    public void testBuildWithParameters() throws Exception {
+    public void testBuildWithParametersRBToolsAvailable() throws Exception {
         setupGlobalConfig();
         final String[] commands = {
-            "pip install --user rbtools",
+            "rbt --version",
             String.format(
                     "rbt patch --api-token %s --server %s " + "--diff-revision %s %s",
                     "UNKNOWN", REVIEWBOARD_URL, DIFF_REVISION, REVIEW_ID)
         };
 
         final PretendSlave slave = jenkins.createPretendSlave(procStarter -> {
-            // Check that we run the correct commands.
+            // When rbtools is already available the probe succeeds and we run
+            // the patch command directly, without creating a virtualenv.
             String command = String.join(" ", procStarter.cmds());
             assertTrue(ArrayUtils.contains(commands, command));
 
@@ -154,7 +159,7 @@ public class ReviewBoardSetupTest {
     public void testBuildWithParametersDownloadOnly() throws Exception {
         setupGlobalConfig();
         final String[] commands = {
-            "pip install --user rbtools",
+            "rbt --version",
             String.format(
                     "rbt patch --api-token %s --server %s " + "--diff-revision %s --write patch.diff %s",
                     "UNKNOWN", REVIEWBOARD_URL, DIFF_REVISION, REVIEW_ID)
@@ -177,6 +182,55 @@ public class ReviewBoardSetupTest {
 
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
         jenkins.assertBuildStatus(Result.SUCCESS, build);
+    }
+
+    @Test
+    public void testBuildInstallsRBToolsInVirtualenv() throws Exception {
+        setupGlobalConfig();
+        final List<String> ranCommands = Collections.synchronizedList(new ArrayList<>());
+
+        final PretendSlave slave = jenkins.createPretendSlave(procStarter -> {
+            final String command = String.join(" ", procStarter.cmds());
+
+            // Probes for rbtools availability fail, so rbtools is installed
+            // into a virtualenv. All other commands succeed.
+            if (command.endsWith("--version")) {
+                return new FakeLauncher.FinishedProc(1);
+            }
+
+            ranCommands.add(command);
+            return new FakeLauncher.FinishedProc(0);
+        });
+
+        final FreeStyleProject project = jenkins.createFreeStyleProject();
+        addBuildParameters(project);
+
+        final ReviewBoardSetup builder = new ReviewBoardSetup(false, true);
+        project.getBuildersList().add(builder);
+        project.setAssignedNode(slave);
+
+        final FreeStyleBuild build = project.scheduleBuild2(0).get();
+        jenkins.assertBuildStatus(Result.SUCCESS, build);
+
+        // A virtualenv is created, rbtools is installed into it, and the patch
+        // is applied using the rbt from the virtualenv. The virtualenv layout
+        // differs on Windows, so account for both the path separator and the
+        // "Scripts"/".exe" naming used there.
+        final boolean isUnix = File.separatorChar == '/';
+        final String binDir = isUnix ? "bin" : "Scripts";
+        final String exeSuffix = isUnix ? "" : ".exe";
+        final String exeSuffixRegex = isUnix ? "" : "\\.exe";
+
+        assertTrue(ranCommands.stream()
+                .map(c -> c.replace('\\', '/'))
+                .anyMatch(c -> c.matches("python3 -m venv .*\\.rbtools-venv")));
+        assertTrue(ranCommands.stream()
+                .map(c -> c.replace('\\', '/'))
+                .anyMatch(
+                        c -> c.matches(".*\\.rbtools-venv/" + binDir + "/pip" + exeSuffixRegex + " install rbtools")));
+        assertTrue(ranCommands.stream()
+                .map(c -> c.replace('\\', '/'))
+                .anyMatch(c -> c.contains(".rbtools-venv/" + binDir + "/rbt" + exeSuffix + " patch ")));
     }
 
     @Test
