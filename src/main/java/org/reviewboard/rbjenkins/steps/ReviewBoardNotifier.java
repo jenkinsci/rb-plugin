@@ -1,16 +1,19 @@
 package org.reviewboard.rbjenkins.steps;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.*;
-import hudson.tasks.Notifier;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
-import jenkins.tasks.SimpleBuildStep;
 import hudson.util.FormValidation;
-import hudson.FilePath;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import jenkins.model.GlobalConfiguration;
+import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -19,10 +22,6 @@ import org.reviewboard.rbjenkins.common.ReviewBoardException;
 import org.reviewboard.rbjenkins.common.ReviewBoardUtils;
 import org.reviewboard.rbjenkins.common.ReviewRequest;
 import org.reviewboard.rbjenkins.config.ReviewBoardGlobalConfiguration;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import javax.annotation.Nonnull;
 
 /**
  * Creates a post-build step in Jenkins for notifying Review Board of the
@@ -33,8 +32,7 @@ public class ReviewBoardNotifier extends Notifier implements SimpleBuildStep {
      * Constructs the notifier.
      */
     @DataBoundConstructor
-    public ReviewBoardNotifier() {
-    }
+    public ReviewBoardNotifier() {}
 
     /**
      * This function will be called as part of the post-build step. It will
@@ -47,28 +45,26 @@ public class ReviewBoardNotifier extends Notifier implements SimpleBuildStep {
      */
     @Override
     public void perform(
-            @Nonnull Run<?, ?> run,
-            @Nonnull FilePath filePath,
-            @Nonnull Launcher launcher,
-            @Nonnull TaskListener listener) throws InterruptedException, IOException {
+            @NonNull Run<?, ?> run,
+            @NonNull FilePath filePath,
+            @NonNull Launcher launcher,
+            @NonNull TaskListener listener)
+            throws InterruptedException, IOException {
         final ReviewRequest reviewRequest;
 
         try {
-            reviewRequest = ReviewBoardUtils.parseReviewRequestFromParameters(
-                run.getActions(ParametersAction.class));
+            reviewRequest = ReviewBoardUtils.parseReviewRequestFromParameters(run.getActions(ParametersAction.class));
         } catch (MalformedURLException e) {
-            listener.error("URL provided in REVIEWBOARD_SERVER is not a " +
-                           "valid URL.");
+            listener.error("URL provided in REVIEWBOARD_SERVER is not a " + "valid URL.");
             return;
         }
 
         // Check that we've successfully received all parameters.
-        if (reviewRequest.getReviewId() == -1 ||
-            reviewRequest.getStatusUpdateId() == -1 ||
-            reviewRequest.getServerURL() == null) {
-            listener.error("REVIEWBOARD_REVIEW_ID, or " +
-                           "REVIEWBOARD_STATUS_UPDATE_ID, or " +
-                           "REVIEWBOARD_SERVER not provided in parameters");
+        if (reviewRequest.getReviewId() == -1
+                || reviewRequest.getStatusUpdateId() == -1
+                || reviewRequest.getServerURL() == null) {
+            listener.error("REVIEWBOARD_REVIEW_ID, or " + "REVIEWBOARD_STATUS_UPDATE_ID, or "
+                    + "REVIEWBOARD_SERVER not provided in parameters");
             return;
         }
 
@@ -99,20 +95,16 @@ public class ReviewBoardNotifier extends Notifier implements SimpleBuildStep {
         try {
             updateStatusUpdate(reviewRequest, state, description);
         } catch (final ReviewBoardException e) {
-            listener.error("Unable to notify Review Board of the result of " +
-                           "the build: " + e.getMessage());
+            listener.error("Unable to notify Review Board of the result of " + "the build: " + e.getMessage());
         }
 
         return;
     }
 
     public void updateStatusUpdate(
-        final ReviewRequest reviewRequest,
-        final ReviewRequest.StatusUpdateState state,
-        final String description)
-        throws IOException, ReviewBoardException {
-        ReviewBoardUtils.updateStatusUpdate(
-            reviewRequest, state, description, null, null);
+            final ReviewRequest reviewRequest, final ReviewRequest.StatusUpdateState state, final String description)
+            throws IOException, ReviewBoardException {
+        ReviewBoardUtils.updateStatusUpdate(reviewRequest, state, description, null, null);
     }
 
     /**
@@ -131,24 +123,19 @@ public class ReviewBoardNotifier extends Notifier implements SimpleBuildStep {
      */
     @Symbol("notifyReviewBoard")
     @Extension
-    public static final class DescriptorImpl
-        extends BuildStepDescriptor<Publisher> {
+    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         /**
          * This validates the Review Board server configuration name. Mostly it
          * checks if there has been a server configuration created.
          * @param value Review Board server config name
          * @return FormValidation
          */
-        public FormValidation doCheckReviewBoardServer(
-            final @QueryParameter String value) {
+        public FormValidation doCheckReviewBoardServer(final @QueryParameter String value) {
             final ReviewBoardGlobalConfiguration globalConfig =
-                GlobalConfiguration.all().get(
-                    ReviewBoardGlobalConfiguration.class);
+                    GlobalConfiguration.all().get(ReviewBoardGlobalConfiguration.class);
 
-            if (globalConfig == null ||
-                globalConfig.getServerConfigurations().isEmpty()) {
-                return FormValidation.error(
-                    Messages.ReviewBoard_Error_NoServers());
+            if (globalConfig == null || globalConfig.getServerConfigurations().isEmpty()) {
+                return FormValidation.error(Messages.ReviewBoard_Error_NoServers());
             }
 
             return FormValidation.ok();
@@ -161,8 +148,7 @@ public class ReviewBoardNotifier extends Notifier implements SimpleBuildStep {
          * @return true
          */
         @Override
-        public boolean isApplicable(
-            final Class<? extends AbstractProject> aClass) {
+        public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
             return true;
         }
 

@@ -7,10 +7,10 @@ import java.net.URL;
  * build.
  */
 public class ReviewRequest {
-    final private int reviewId;
-    final private int revision;
-    final private int statusUpdateId;
-    final private URL serverURL;
+    private final int reviewId;
+    private final int revision;
+    private final int statusUpdateId;
+    private final URL serverURL;
 
     /**
      * Enumerates the possible states for a status update to be in.
@@ -46,10 +46,7 @@ public class ReviewRequest {
      * @param statusUpdateId Review request's status update ID
      * @param serverURL Review Board server URL
      */
-    public ReviewRequest(final int reviewId,
-                         final int revision,
-                         final int statusUpdateId,
-                         final URL serverURL) {
+    public ReviewRequest(final int reviewId, final int revision, final int statusUpdateId, final URL serverURL) {
         this.reviewId = reviewId;
         this.revision = revision;
         this.statusUpdateId = statusUpdateId;

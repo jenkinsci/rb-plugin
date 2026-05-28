@@ -9,22 +9,20 @@ import hudson.model.*;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.List;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.reviewboard.rbjenkins.Messages;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.List;
-
 /**
  * Stores configuration details for a Review Board server.
  */
-public class ReviewBoardServerConfiguration extends
-    AbstractDescribableImpl<ReviewBoardServerConfiguration> {
+public class ReviewBoardServerConfiguration extends AbstractDescribableImpl<ReviewBoardServerConfiguration> {
     private final String reviewBoardURL;
     private final String credentialsId;
 
@@ -35,8 +33,7 @@ public class ReviewBoardServerConfiguration extends
      * @param credentialsId Credentials identifier
      */
     @DataBoundConstructor
-    public ReviewBoardServerConfiguration(final String reviewBoardURL,
-                                          final String credentialsId) {
+    public ReviewBoardServerConfiguration(final String reviewBoardURL, final String credentialsId) {
         this.reviewBoardURL = reviewBoardURL;
         this.credentialsId = credentialsId;
     }
@@ -64,12 +61,12 @@ public class ReviewBoardServerConfiguration extends
      */
     public String getReviewBoardAPIToken() {
         final List<StringCredentials> credentials = CredentialsMatchers.filter(
-            CredentialsProvider.lookupCredentials(
-                StringCredentials.class,
-                Jenkins.getInstance(),
-                ACL.SYSTEM,
-                URIRequirementBuilder.fromUri(reviewBoardURL).build()),
-            CredentialsMatchers.withId(credentialsId));
+                CredentialsProvider.lookupCredentials(
+                        StringCredentials.class,
+                        Jenkins.getInstance(),
+                        ACL.SYSTEM,
+                        URIRequirementBuilder.fromUri(reviewBoardURL).build()),
+                CredentialsMatchers.withId(credentialsId));
 
         if (!credentials.isEmpty()) {
             return credentials.get(0).getSecret().getPlainText();
@@ -83,8 +80,7 @@ public class ReviewBoardServerConfiguration extends
      * functions for fields in its configuration form.
      */
     @Extension
-    public static final class DescriptorImpl
-        extends Descriptor<ReviewBoardServerConfiguration> {
+    public static final class DescriptorImpl extends Descriptor<ReviewBoardServerConfiguration> {
         /**
          * Returns the display name for this configuration, as shown in the
          * Jenkins GUI.
@@ -92,8 +88,7 @@ public class ReviewBoardServerConfiguration extends
          */
         @Override
         public String getDisplayName() {
-            return Messages.
-                ReviewBoardServerConfiguration_DescriptorImpl_DisplayName();
+            return Messages.ReviewBoardServerConfiguration_DescriptorImpl_DisplayName();
         }
 
         /**
@@ -103,8 +98,7 @@ public class ReviewBoardServerConfiguration extends
          */
         public FormValidation doCheckName(final @QueryParameter String value) {
             if (value.isEmpty()) {
-                return FormValidation.error(
-                    Messages.ReviewBoard_Error_InvalidName());
+                return FormValidation.error(Messages.ReviewBoard_Error_InvalidName());
             } else {
                 return FormValidation.ok();
             }
@@ -115,14 +109,12 @@ public class ReviewBoardServerConfiguration extends
          * @param value Review Board URL
          * @return FormValidation status
          */
-        public FormValidation doCheckReviewBoardURL(
-            final @QueryParameter String value) {
+        public FormValidation doCheckReviewBoardURL(final @QueryParameter String value) {
             try {
                 final URL url = new URL(value);
                 url.toURI();
             } catch (final MalformedURLException | URISyntaxException e) {
-                return FormValidation.error(
-                    Messages.ReviewBoard_Error_InvalidURL());
+                return FormValidation.error(Messages.ReviewBoard_Error_InvalidURL());
             }
             return FormValidation.ok();
         }
@@ -135,22 +127,19 @@ public class ReviewBoardServerConfiguration extends
          * @return ListBoxModel containing credential IDs
          */
         public ListBoxModel doFillCredentialsIdItems(
-            @QueryParameter String reviewBoardURL,
-            @QueryParameter String credentialsId) {
+                @QueryParameter String reviewBoardURL, @QueryParameter String credentialsId) {
             if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
-                return new StandardListBoxModel().
-                    includeCurrentValue(credentialsId);
+                return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
 
             return new StandardListBoxModel()
-                .includeEmptyValue()
-                .includeMatchingAs(
-                    ACL.SYSTEM,
-                    Jenkins.getInstance(),
-                    StringCredentials.class,
-                    URIRequirementBuilder.fromUri(reviewBoardURL).build(),
-                    CredentialsMatchers.always()
-                );
+                    .includeEmptyValue()
+                    .includeMatchingAs(
+                            ACL.SYSTEM,
+                            Jenkins.getInstance(),
+                            StringCredentials.class,
+                            URIRequirementBuilder.fromUri(reviewBoardURL).build(),
+                            CredentialsMatchers.always());
         }
     }
 }

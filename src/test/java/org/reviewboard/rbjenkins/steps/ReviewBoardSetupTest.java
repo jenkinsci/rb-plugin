@@ -1,23 +1,22 @@
 package org.reviewboard.rbjenkins.steps;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import hudson.Launcher;
-import hudson.Proc;
 import hudson.model.*;
+import java.io.IOException;
 import jenkins.model.GlobalConfiguration;
-import org.apache.commons.lang.ArrayUtils;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
+import org.apache.commons.lang3.ArrayUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.FakeLauncher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.PretendSlave;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.reviewboard.rbjenkins.config.ReviewBoardGlobalConfiguration;
 import org.reviewboard.rbjenkins.config.ReviewBoardServerConfiguration;
 
-import java.io.IOException;
-
+@WithJenkins
 public class ReviewBoardSetupTest {
     private static final String REVIEWBOARD_URL = "http://localhost";
     private static final String REVIEWBOARD_CREDENTIALS = "api_token";
@@ -25,14 +24,20 @@ public class ReviewBoardSetupTest {
     private static final String STATUS_UPDATE_ID = "2";
     private static final String DIFF_REVISION = "3";
 
-    @Rule
-    final public JenkinsRule jenkins = new JenkinsRule();
+    private JenkinsRule jenkins;
 
-    @After
+    @BeforeEach
+    public void setUp(JenkinsRule rule) {
+        this.jenkins = rule;
+    }
+
+    @AfterEach
     public void resetGlobalConfig() {
         // Ensure that each test has a clean global config
-        GlobalConfiguration.all().get(ReviewBoardGlobalConfiguration.class).
-            getServerConfigurations().clear();
+        GlobalConfiguration.all()
+                .get(ReviewBoardGlobalConfiguration.class)
+                .getServerConfigurations()
+                .clear();
     }
 
     public void setupGlobalConfig() {
@@ -41,36 +46,26 @@ public class ReviewBoardSetupTest {
 
     public void setupGlobalConfig(boolean addServerConfig) {
         ReviewBoardGlobalConfiguration globalConfig =
-            GlobalConfiguration.all().get(
-                ReviewBoardGlobalConfiguration.class);
+                GlobalConfiguration.all().get(ReviewBoardGlobalConfiguration.class);
 
         if (addServerConfig) {
             ReviewBoardServerConfiguration serverConfig =
-                new ReviewBoardServerConfiguration(REVIEWBOARD_URL,
-                                                   REVIEWBOARD_CREDENTIALS);
+                    new ReviewBoardServerConfiguration(REVIEWBOARD_URL, REVIEWBOARD_CREDENTIALS);
 
             globalConfig.getServerConfigurations().add(serverConfig);
         }
     }
 
-    public void addBuildParameters(final FreeStyleProject project)
-        throws IOException {
+    public void addBuildParameters(final FreeStyleProject project) throws IOException {
         final StringParameterDefinition serverURL =
-            new StringParameterDefinition("REVIEWBOARD_SERVER",
-                                          REVIEWBOARD_URL);
-        final StringParameterDefinition reviewId =
-            new StringParameterDefinition("REVIEWBOARD_REVIEW_ID", REVIEW_ID);
+                new StringParameterDefinition("REVIEWBOARD_SERVER", REVIEWBOARD_URL);
+        final StringParameterDefinition reviewId = new StringParameterDefinition("REVIEWBOARD_REVIEW_ID", REVIEW_ID);
         final StringParameterDefinition diffRevision =
-            new StringParameterDefinition("REVIEWBOARD_DIFF_REVISION",
-                                          DIFF_REVISION);
+                new StringParameterDefinition("REVIEWBOARD_DIFF_REVISION", DIFF_REVISION);
         final StringParameterDefinition statusUpdateId =
-            new StringParameterDefinition("REVIEWBOARD_STATUS_UPDATE_ID",
-                                          STATUS_UPDATE_ID);
+                new StringParameterDefinition("REVIEWBOARD_STATUS_UPDATE_ID", STATUS_UPDATE_ID);
 
-        project.addProperty(new ParametersDefinitionProperty(reviewId,
-                                                             diffRevision,
-                                                             statusUpdateId,
-                                                             serverURL));
+        project.addProperty(new ParametersDefinitionProperty(reviewId, diffRevision, statusUpdateId, serverURL));
     }
 
     @Test
@@ -79,8 +74,8 @@ public class ReviewBoardSetupTest {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         project.getBuildersList().add(new ReviewBoardSetup(false, true));
         project = jenkins.configRoundtrip(project);
-        jenkins.assertEqualDataBoundBeans(new ReviewBoardSetup(false, true),
-                                          project.getBuildersList().get(0));
+        jenkins.assertEqualDataBoundBeans(
+                new ReviewBoardSetup(false, true), project.getBuildersList().get(0));
     }
 
     @Test
@@ -89,8 +84,8 @@ public class ReviewBoardSetupTest {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         project.getBuildersList().add(new ReviewBoardSetup(true, true));
         project = jenkins.configRoundtrip(project);
-        jenkins.assertEqualDataBoundBeans(new ReviewBoardSetup(true, true),
-                                          project.getBuildersList().get(0));
+        jenkins.assertEqualDataBoundBeans(
+                new ReviewBoardSetup(true, true), project.getBuildersList().get(0));
     }
 
     @Test
@@ -103,9 +98,10 @@ public class ReviewBoardSetupTest {
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
         jenkins.assertBuildStatus(Result.FAILURE, build);
         jenkins.assertLogContains(
-            "REVIEWBOARD_REVIEW_ID, REVIEWBOARD_DIFF_REVISION or " +
-            "REVIEWBOARD_STATUS_UPDATE_ID, or REVIEWBOARD_SERVER not " +
-            "provided in parameters", build);
+                "REVIEWBOARD_REVIEW_ID, REVIEWBOARD_DIFF_REVISION or "
+                        + "REVIEWBOARD_STATUS_UPDATE_ID, or REVIEWBOARD_SERVER not "
+                        + "provided in parameters",
+                build);
     }
 
     @Test
@@ -116,15 +112,13 @@ public class ReviewBoardSetupTest {
         project.getBuildersList().add(builder);
 
         final StringParameterDefinition invalidURL =
-            new StringParameterDefinition("REVIEWBOARD_SERVER",
-                                          "htp?:/invalidurl?/.");
+                new StringParameterDefinition("REVIEWBOARD_SERVER", "htp?:/invalidurl?/.");
 
         project.addProperty(new ParametersDefinitionProperty(invalidURL));
 
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
         jenkins.assertBuildStatus(Result.FAILURE, build);
-        jenkins.assertLogContains(
-            "URL provided in REVIEWBOARD_SERVER is not a valid URL.", build);
+        jenkins.assertLogContains("URL provided in REVIEWBOARD_SERVER is not a valid URL.", build);
     }
 
     @Test
@@ -132,12 +126,9 @@ public class ReviewBoardSetupTest {
         setupGlobalConfig();
         final String[] commands = {
             "pip install --user rbtools",
-            String.format("rbt patch --api-token %s --server %s " +
-                          "--diff-revision %s %s",
-                          "UNKNOWN",
-                          REVIEWBOARD_URL,
-                          DIFF_REVISION,
-                          REVIEW_ID)
+            String.format(
+                    "rbt patch --api-token %s --server %s " + "--diff-revision %s %s",
+                    "UNKNOWN", REVIEWBOARD_URL, DIFF_REVISION, REVIEW_ID)
         };
 
         final PretendSlave slave = jenkins.createPretendSlave(procStarter -> {
@@ -164,12 +155,9 @@ public class ReviewBoardSetupTest {
         setupGlobalConfig();
         final String[] commands = {
             "pip install --user rbtools",
-            String.format("rbt patch --api-token %s --server %s " +
-                          "--diff-revision %s --write patch.diff %s",
-                          "UNKNOWN",
-                          REVIEWBOARD_URL,
-                          DIFF_REVISION,
-                          REVIEW_ID)
+            String.format(
+                    "rbt patch --api-token %s --server %s " + "--diff-revision %s --write patch.diff %s",
+                    "UNKNOWN", REVIEWBOARD_URL, DIFF_REVISION, REVIEW_ID)
         };
 
         final PretendSlave slave = jenkins.createPretendSlave(procStarter -> {
@@ -202,8 +190,7 @@ public class ReviewBoardSetupTest {
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
         jenkins.assertBuildStatus(Result.FAILURE, build);
         jenkins.assertLogContains(
-            "No Review Board server configuration found for server URL " +
-            "'http://localhost'.", build);
+                "No Review Board server configuration found for server URL " + "'http://localhost'.", build);
     }
 
     @Test
@@ -218,8 +205,7 @@ public class ReviewBoardSetupTest {
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
         jenkins.assertBuildStatus(Result.FAILURE, build);
         jenkins.assertLogContains(
-            "No Review Board server configuration found for server URL " +
-            "'http://localhost'.", build);
+                "No Review Board server configuration found for server URL " + "'http://localhost'.", build);
     }
 
     @Test
