@@ -1,13 +1,12 @@
 package org.reviewboard.rbjenkins.config;
 
 import hudson.Extension;
-import jenkins.model.GlobalConfiguration;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import jenkins.model.GlobalConfiguration;
 
 /**
  * Provides a global configuration for ReviewBoard servers.
@@ -15,8 +14,7 @@ import java.util.List;
 @Extension
 public class ReviewBoardGlobalConfiguration extends GlobalConfiguration {
     private final Object serverConfigurationsLock = new Object();
-    private List<ReviewBoardServerConfiguration> serverConfigurations =
-        new ArrayList<>();
+    private List<ReviewBoardServerConfiguration> serverConfigurations = new ArrayList<>();
 
     /**
      * Construct the configuration from prior saved entries.
@@ -29,8 +27,7 @@ public class ReviewBoardGlobalConfiguration extends GlobalConfiguration {
      * Construct the global configuration with the given server configurations.
      * @param serverConfigurations List of Review Board server configurations
      */
-    public ReviewBoardGlobalConfiguration(
-        final List<ReviewBoardServerConfiguration> serverConfigurations) {
+    public ReviewBoardGlobalConfiguration(final List<ReviewBoardServerConfiguration> serverConfigurations) {
         synchronized (serverConfigurationsLock) {
             this.serverConfigurations = serverConfigurations;
         }
@@ -40,8 +37,7 @@ public class ReviewBoardGlobalConfiguration extends GlobalConfiguration {
      * Set the server configurations list then save the entries.
      * @param serverConfigurations List of Review Board server configurations
      */
-    public void setServerConfigurations(
-        final List<ReviewBoardServerConfiguration> serverConfigurations) {
+    public void setServerConfigurations(final List<ReviewBoardServerConfiguration> serverConfigurations) {
         synchronized (serverConfigurationsLock) {
             this.serverConfigurations = serverConfigurations;
             save();
@@ -62,13 +58,11 @@ public class ReviewBoardGlobalConfiguration extends GlobalConfiguration {
      * @param serverURL Review Board server URL
      * @return server configuration or null
      */
-    public ReviewBoardServerConfiguration getServerConfiguration(
-        final URL serverURL) {
+    public ReviewBoardServerConfiguration getServerConfiguration(final URL serverURL) {
         synchronized (serverConfigurationsLock) {
             for (ReviewBoardServerConfiguration config : serverConfigurations) {
                 try {
-                    if (new URI(config.getReviewBoardURL()).
-                        equals(serverURL.toURI())) {
+                    if (new URI(config.getReviewBoardURL()).equals(serverURL.toURI())) {
                         return config;
                     }
                 } catch (URISyntaxException e) {

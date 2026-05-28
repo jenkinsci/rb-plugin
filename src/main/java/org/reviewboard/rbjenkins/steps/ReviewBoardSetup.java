@@ -9,8 +9,8 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import jenkins.model.GlobalConfiguration;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
@@ -29,8 +29,7 @@ import org.reviewboard.rbjenkins.config.ReviewBoardServerConfiguration;
  */
 public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
     private static final String RBT_INSTALL = "pip install --user rbtools";
-    private static final String RBT_COMMAND =
-        "rbt patch --api-token %s --server %s --diff-revision %d %s%d";
+    private static final String RBT_COMMAND = "rbt patch --api-token %s --server %s --diff-revision %d %s%d";
 
     private boolean downloadOnly = false;
     private boolean installRBTools = true;
@@ -45,11 +44,11 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
     }
 
     public boolean getDownloadOnly() {
-      return downloadOnly;
+        return downloadOnly;
     }
 
     public boolean getInstallRBTools() {
-      return installRBTools;
+        return installRBTools;
     }
 
     /**
@@ -62,38 +61,34 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
      * @param listener Logger
      */
     @Override
-    public void perform(final Run<?, ?> run, final FilePath workspace,
-                        final Launcher launcher, final TaskListener listener)
-        throws InterruptedException,IOException {
+    public void perform(
+            final Run<?, ?> run, final FilePath workspace, final Launcher launcher, final TaskListener listener)
+            throws InterruptedException, IOException {
         final ReviewRequest reviewRequest;
 
         try {
-            reviewRequest = ReviewBoardUtils.parseReviewRequestFromParameters(
-                run.getActions(ParametersAction.class));
+            reviewRequest = ReviewBoardUtils.parseReviewRequestFromParameters(run.getActions(ParametersAction.class));
         } catch (MalformedURLException e) {
-            listener.error("URL provided in REVIEWBOARD_SERVER is not a " +
-                           "valid URL.");
+            listener.error("URL provided in REVIEWBOARD_SERVER is not a " + "valid URL.");
             run.setResult(Result.FAILURE);
             return;
         }
 
         // Check that we've successfully received all required parameters.
-        if (reviewRequest.getReviewId() == -1 ||
-            reviewRequest.getRevision() == -1 ||
-            reviewRequest.getStatusUpdateId() == -1 ||
-            reviewRequest.getServerURL() == null) {
-            listener.error("REVIEWBOARD_REVIEW_ID, " +
-                           "REVIEWBOARD_DIFF_REVISION or " +
-                           "REVIEWBOARD_STATUS_UPDATE_ID, or " +
-                           "REVIEWBOARD_SERVER not provided in " +
-                           "parameters");
+        if (reviewRequest.getReviewId() == -1
+                || reviewRequest.getRevision() == -1
+                || reviewRequest.getStatusUpdateId() == -1
+                || reviewRequest.getServerURL() == null) {
+            listener.error("REVIEWBOARD_REVIEW_ID, " + "REVIEWBOARD_DIFF_REVISION or "
+                    + "REVIEWBOARD_STATUS_UPDATE_ID, or "
+                    + "REVIEWBOARD_SERVER not provided in "
+                    + "parameters");
             run.setResult(Result.FAILURE);
             return;
         }
 
         final ReviewBoardGlobalConfiguration globalConfig =
-            GlobalConfiguration.all().get(
-                ReviewBoardGlobalConfiguration.class);
+                GlobalConfiguration.all().get(ReviewBoardGlobalConfiguration.class);
         if (globalConfig == null) {
             listener.error("No Review Board server configurations found.");
             run.setResult(Result.FAILURE);
@@ -101,12 +96,11 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
         }
 
         final ReviewBoardServerConfiguration serverConfig =
-            globalConfig.getServerConfiguration(reviewRequest.getServerURL());
+                globalConfig.getServerConfiguration(reviewRequest.getServerURL());
         if (serverConfig == null) {
-            listener.error(
-                String.format("No Review Board server configuration found " +
-                              "for server URL '%s'.",
-                              reviewRequest.getServerURL().toString()));
+            listener.error(String.format(
+                    "No Review Board server configuration found " + "for server URL '%s'.",
+                    reviewRequest.getServerURL().toString()));
             run.setResult(Result.FAILURE);
             return;
         }
@@ -118,17 +112,16 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
 
         // Construct commands to install and use rbtools.
         final String rbtCommand = String.format(
-            RBT_COMMAND,
-            serverConfig.getReviewBoardAPIToken(),
-            serverConfig.getReviewBoardURL(),
-            reviewRequest.getRevision(),
-            downloadOnlyFile,
-            reviewRequest.getReviewId());
+                RBT_COMMAND,
+                serverConfig.getReviewBoardAPIToken(),
+                serverConfig.getReviewBoardURL(),
+                reviewRequest.getRevision(),
+                downloadOnlyFile,
+                reviewRequest.getReviewId());
 
         // Generate a command mask to hide the API token from the console
         // output.
-        final boolean[] rbtCommandMask =
-            new boolean[rbtCommand.split(" ").length];
+        final boolean[] rbtCommandMask = new boolean[rbtCommand.split(" ").length];
 
         // Set the 4th entry's mask to true - this is the API token.
         rbtCommandMask[3] = true;
@@ -141,8 +134,7 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
 
         for (Launcher.ProcStarter args : commands) {
             // Run the command in the workspace
-            args.stdout(listener).pwd(workspace)
-                .envs(run.getEnvironment(listener));
+            args.stdout(listener).pwd(workspace).envs(run.getEnvironment(listener));
             final Proc process = launcher.launch(args);
 
             final int result = process.join();
@@ -155,14 +147,13 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
         // Update the review request with the link to the build.
         try {
             ReviewBoardUtils.updateStatusUpdate(
-                reviewRequest,
-                ReviewRequest.StatusUpdateState.PENDING_STATE,
-                "build running",
-                run.getAbsoluteUrl(),
-                "See build");
+                    reviewRequest,
+                    ReviewRequest.StatusUpdateState.PENDING_STATE,
+                    "build running",
+                    run.getAbsoluteUrl(),
+                    "See build");
         } catch (final ReviewBoardException e) {
-            listener.error("Unable to notify Review Board of the build: " +
-                           e.getMessage());
+            listener.error("Unable to notify Review Board of the build: " + e.getMessage());
         }
     }
 
@@ -172,24 +163,19 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
      */
     @Symbol("publishReview")
     @Extension
-    public static final class DescriptorImpl
-        extends BuildStepDescriptor<Builder> {
+    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
         /**
          * This validates the Review Board server configuration name. Mostly it
          * checks if there has been a server configuration created.
          * @param value Review Board server config name
          * @return FormValidation
          */
-        public FormValidation doCheckReviewBoardServer(
-            final @QueryParameter String value) {
+        public FormValidation doCheckReviewBoardServer(final @QueryParameter String value) {
             final ReviewBoardGlobalConfiguration globalConfig =
-                GlobalConfiguration.all().get(
-                    ReviewBoardGlobalConfiguration.class);
+                    GlobalConfiguration.all().get(ReviewBoardGlobalConfiguration.class);
 
-            if (globalConfig == null ||
-                globalConfig.getServerConfigurations().isEmpty()) {
-                return FormValidation.error(
-                    Messages.ReviewBoard_Error_NoServers());
+            if (globalConfig == null || globalConfig.getServerConfigurations().isEmpty()) {
+                return FormValidation.error(Messages.ReviewBoard_Error_NoServers());
             }
 
             return FormValidation.ok();
@@ -202,8 +188,7 @@ public class ReviewBoardSetup extends Builder implements SimpleBuildStep {
          * @return true
          */
         @Override
-        public boolean isApplicable(
-            final Class<? extends AbstractProject> aClass) {
+        public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
             return true;
         }
 

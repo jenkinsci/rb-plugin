@@ -1,14 +1,13 @@
 package org.reviewboard.rbjenkins.config;
 
-import org.junit.Test;
-import org.mockito.Mockito;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 public class ReviewBoardGlobalConfigurationTest {
     private static final String REVIEWBOARD_URL = "http://localhost";
@@ -18,8 +17,7 @@ public class ReviewBoardGlobalConfigurationTest {
     public void testConstructorAndSetter() throws Exception {
         List<ReviewBoardServerConfiguration> serverConfigs = new ArrayList<>();
 
-        ReviewBoardGlobalConfiguration config =
-            new ReviewBoardGlobalConfiguration(serverConfigs);
+        ReviewBoardGlobalConfiguration config = new ReviewBoardGlobalConfiguration(serverConfigs);
 
         config = Mockito.spy(config);
         // save() will otherwise throw an exception due to not being properly
@@ -32,15 +30,11 @@ public class ReviewBoardGlobalConfigurationTest {
     @Test
     public void testExistingServer() throws Exception {
         List<ReviewBoardServerConfiguration> serverConfigs = new ArrayList<>();
-        serverConfigs.add(
-            new ReviewBoardServerConfiguration(REVIEWBOARD_URL,
-                                               REVIEWBOARD_CREDENTIALS));
+        serverConfigs.add(new ReviewBoardServerConfiguration(REVIEWBOARD_URL, REVIEWBOARD_CREDENTIALS));
 
-        ReviewBoardGlobalConfiguration config =
-            new ReviewBoardGlobalConfiguration(serverConfigs);
+        ReviewBoardGlobalConfiguration config = new ReviewBoardGlobalConfiguration(serverConfigs);
 
-        ReviewBoardServerConfiguration server =
-            config.getServerConfiguration(new URL(REVIEWBOARD_URL));
+        ReviewBoardServerConfiguration server = config.getServerConfiguration(new URL(REVIEWBOARD_URL));
 
         assertNotNull(server);
     }
@@ -48,15 +42,11 @@ public class ReviewBoardGlobalConfigurationTest {
     @Test
     public void testNonExistentServer() throws Exception {
         List<ReviewBoardServerConfiguration> serverConfigs = new ArrayList<>();
-        serverConfigs.add(
-            new ReviewBoardServerConfiguration(REVIEWBOARD_URL,
-                                               REVIEWBOARD_CREDENTIALS));
+        serverConfigs.add(new ReviewBoardServerConfiguration(REVIEWBOARD_URL, REVIEWBOARD_CREDENTIALS));
 
-        ReviewBoardGlobalConfiguration config =
-            new ReviewBoardGlobalConfiguration(serverConfigs);
+        ReviewBoardGlobalConfiguration config = new ReviewBoardGlobalConfiguration(serverConfigs);
 
-        ReviewBoardServerConfiguration server =
-            config.getServerConfiguration(new URL("http://nonexistent"));
+        ReviewBoardServerConfiguration server = config.getServerConfiguration(new URL("http://nonexistent"));
 
         assertNull(server);
     }
